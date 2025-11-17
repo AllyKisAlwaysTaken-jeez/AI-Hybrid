@@ -27,17 +27,17 @@ function removeLoadingBubble() {
 let lastUserInput = null;
 
 form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+  e.preventDefault(); // stop refresh
 
   const safe = (val) => (val || "").toString().trim();
 
-const industry = safe(document.getElementById("industry")?.value);
-const style = safe(document.getElementById("style")?.value);
-const goals = safe(document.getElementById("goals")?.value);
-const competitors = safe(document.getElementById("competitors")?.value);
+  const industry = safe(document.getElementById("industry")?.value);
+  const style = safe(document.getElementById("style")?.value);
+  const goals = safe(document.getElementById("goals")?.value);
 
-    .getElementById("competitors")
-    .value.split(",")
+  const competitorsRaw = document.getElementById("competitors")?.value || "";
+  const competitors = competitorsRaw
+    .split(",")
     .map((c) => c.trim())
     .filter((c) => c);
 
@@ -71,9 +71,8 @@ const competitors = safe(document.getElementById("competitors")?.value);
     `;
 
     addMessage(botMessage, "bot");
-
-    // Save last request data
     lastUserInput = { industry, style, goals, competitors };
+
   } catch (err) {
     removeLoadingBubble();
     addMessage(`❌ Error: ${err.message}`, "bot");
