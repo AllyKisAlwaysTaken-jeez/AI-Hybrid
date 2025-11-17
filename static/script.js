@@ -29,10 +29,13 @@ let lastUserInput = null;
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const industry = document.getElementById("industry").value;
-  const style = document.getElementById("style").value;
-  const goals = document.getElementById("goals").value;
-  const competitors = document
+  const safe = (val) => (val || "").toString().trim();
+
+const industry = safe(document.getElementById("industry")?.value);
+const style = safe(document.getElementById("style")?.value);
+const goals = safe(document.getElementById("goals")?.value);
+const competitors = safe(document.getElementById("competitors")?.value);
+
     .getElementById("competitors")
     .value.split(",")
     .map((c) => c.trim())
