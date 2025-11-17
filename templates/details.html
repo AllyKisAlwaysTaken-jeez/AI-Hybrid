@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Enter Your Details</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Step 1 — Tell me about you</h1>
+
+    <form method="POST" action="/details" class="details-form">
+      <label>Name</label>
+      <input name="name" required>
+
+      <label>Profession (used as industry)</label>
+      <input name="profession" required>
+
+      <label>Short bio</label>
+      <textarea name="bio" rows="4" required></textarea>
+
+      <label>Skills (comma-separated)</label>
+      <input name="skills" placeholder="Python, React, UX">
+
+      <label>Profile image URL</label>
+      <input name="image_url" placeholder="https://...">
+
+      <label>Contact email</label>
+      <input name="email" type="email">
+
+      <label>Social links (comma-separated)</label>
+      <input name="socials" placeholder="https://github.com/you, https://linkedin.com/in/you">
+
+      <label>Theme</label>
+      <select name="theme">
+        <option>Modern</option>
+        <option>Minimalist</option>
+        <option>Dark</option>
+        <option>Pastel</option>
+      </select>
+
+      <label>Layout</label>
+      <select name="layout">
+        <option>Hero</option>
+        <option>Grid</option>
+        <option>Sections</option>
+      </select>
+
+      <button type="submit" class="btn">Generate My Website</button>
+    </form>
+
+    <p style="margin-top:20px;"><a href="/">← Back to Chat</a></p>
+  </main>
+</body>
+</html>

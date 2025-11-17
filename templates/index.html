@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Portfolio Assistant</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="chat-container">
+    <header>
+      <h1>💼 AI Portfolio Assistant</h1>
+      <p>Get tailored portfolio advice instantly</p>
+    </header>
+
+    <div id="chat-box" class="chat-box">
+      <div class="message bot">
+        👋 Hi there! Tell me your <strong>industry</strong>, <strong>style</strong>, and <strong>goals</strong>, and I’ll help you build the perfect portfolio.
+      </div>
+    </div>
+
+    <form id="chat-form" class="chat-form">
+      <input type="text" id="industry" placeholder="Industry (e.g., Tech)" required />
+      <input type="text" id="style" placeholder="Style (e.g., Minimalist, Modern)" required />
+      <input type="text" id="goals" placeholder="Goals (e.g., Attract freelance clients)" required />
+      <input type="text" id="competitors" placeholder="Competitor URLs (comma-separated)" />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

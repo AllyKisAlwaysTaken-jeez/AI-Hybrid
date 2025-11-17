@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Assistant — Edit Site</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <style>
+    .assistant-area { max-width:900px; margin:1rem auto; }
+    .assistant-messages { background:#fff; padding:12px; border-radius:10px; min-height:120px; }
+    .assistant-controls { margin-top:12px; display:flex; gap:8px; align-items:flex-start; }
+    textarea { width:100%; min-height:80px; padding:8px; }
+  </style>
+</head>
+<body>
+  <main class="container assistant-area">
+    <h1>Assistant — Edit Your Site</h1>
+
+    <p>Write what you want changed (theme, bio, skills, add project, shorten text). Example: <em>"Change theme to Pastel and shorten my bio to 2 sentences."</em></p>
+
+    <div id="status" style="margin-bottom:10px;"></div>
+
+    <div class="assistant-controls">
+      <textarea id="user-in" placeholder="Type your instruction..." ></textarea>
+      <div>
+        <button id="send-btn" class="btn">Apply Changes</button>
+        <p style="margin-top:8px;"><a href="/preview">Preview current site</a></p>
+      </div>
+    </div>
+
+    <div id="messages" class="assistant-messages"></div>
+
+    <p style="margin-top:18px;"><a href="/">← Back to Chat</a></p>
+  </main>
+
+<script>
+document.getElementById('send-btn').addEventListener('click', async () => {
+  const text = document.getElementById('user-in').value.trim();
+  if (!text) return alert('Enter an instruction.');
+
+  const messagesDiv = document.getElementById('messages');
+  messagesDiv.innerHTML += `<div><strong>You:</strong> ${text}</div>`;
+
+  // Heuristic: parse simple instructions into updates
+  // This is a simple approach: for robust NLP you'd call your assistant to parse to structured edits.
+  const updates = {};
+
+  // theme change: "theme to Pastel"
+  const themeMatch = text.match(/theme (to|:)\s*([A-Za-z]+)/i);
+  if (themeMatch) updates.theme = themeMatch[2];
+
+  // shorten bio / update bio
+  const bioMatch = text.match(/bio (to|:)\s*(.+)/i);
+  if (bioMatch) updates.bio = bioMatch[2];
+
+  // change name
+  const nameMatch = text.match(/name (to|:)\s*(.+)/i);
+  if (nameMatch) updates.name = nameMatch[2];
+
+  // skills: "skills: Python, React"
+  const skillsMatch = text.match(/skills (to|:)\s*(.+)/i);
+  if (skillsMatch) updates.skills = skillsMatch[2];
+
+  // fallback: if no structured parse, send the full instruction as 'bio' edit (quick heuristic)
+  if (Object.keys(updates).length === 0) {
+    updates.bio = text;
+  }
+
+  document.getElementById('status').innerText = 'Applying changes...';
+  try {
+    const res = await fetch('/api/update-site', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({updates})
+    });
+    const data = await res.json();
+    document.getElementById('status').innerText = data.message || 'Updated';
+    messagesDiv.innerHTML += `<div><strong>Assistant:</strong> ${data.message}</div>`;
+  } catch (err) {
+    document.getElementById('status').innerText = 'Error: ' + err.message;
+  }
+});
+</script>
+</body>
+</html>
