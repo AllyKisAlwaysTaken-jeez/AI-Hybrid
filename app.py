@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 import os
 
-from builder import build_portfolio_website
+from agent.builder import build_portfolio_website
 from competitor_scrapper import analyze_competitors
 from ai_generator import generate_response
 import recommendation_engine
