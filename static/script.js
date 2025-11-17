@@ -23,11 +23,11 @@ function removeLoadingBubble() {
   if (loading) loading.remove();
 }
 
-// Store user data to reuse for generating website
+// Store last user request
 let lastUserInput = null;
 
 form.addEventListener("submit", async (e) => {
-  e.preventDefault(); // stop refresh
+  e.preventDefault();
 
   const safe = (val) => (val || "").toString().trim();
 
@@ -35,11 +35,12 @@ form.addEventListener("submit", async (e) => {
   const style = safe(document.getElementById("style")?.value);
   const goals = safe(document.getElementById("goals")?.value);
 
+  // Fix competitor parsing — your version had a broken line
   const competitorsRaw = document.getElementById("competitors")?.value || "";
   const competitors = competitorsRaw
     .split(",")
     .map((c) => c.trim())
-    .filter((c) => c);
+    .filter((c) => c.length);
 
   const userMessage = `
     Industry: <strong>${industry}</strong><br>
@@ -49,7 +50,6 @@ form.addEventListener("submit", async (e) => {
 
   addMessage(userMessage, "user");
   form.reset();
-
   addLoadingBubble();
 
   try {
@@ -62,27 +62,40 @@ form.addEventListener("submit", async (e) => {
     const data = await res.json();
     removeLoadingBubble();
 
+    // Harden output so nothing crashes even if backend fails
+    const copywriting = (data.copywriting || "⚠️ No copywriting returned.")
+      .toString()
+      .replace(/\n/g, "<br>");
+
+    const keywords =
+      data.seo_tips?.recommended_keywords?.join(", ") ||
+      "No keywords returned.";
+
+    const designGuidelines =
+      (data.design_guidelines || [])
+        .map((g) => `• ${g}`)
+        .join("<br>") || "No design guidelines returned.";
+
     const botMessage = `
-      <strong>📋 Copywriting Advice:</strong><br>${data.copywriting.replace(/\n/g, "<br>")}<br><br>
-      <strong>🔍 SEO Tips:</strong> ${data.seo_tips.recommended_keywords.join(", ")}<br>
-      <strong>🎨 Design Guidelines:</strong><br>
-      ${data.design_guidelines.map((g) => `• ${g}`).join("<br>")}<br><br>
+      <strong>📋 Copywriting Advice:</strong><br>${copywriting}<br><br>
+      <strong>🔍 SEO Tips:</strong> ${keywords}<br><br>
+      <strong>🎨 Design Guidelines:</strong><br>${designGuidelines}<br><br>
       <button id="generate-site-btn" class="generate-btn">🚀 Build My Portfolio Website</button>
     `;
 
     addMessage(botMessage, "bot");
-    lastUserInput = { industry, style, goals, competitors };
 
+    lastUserInput = { industry, style, goals, competitors };
   } catch (err) {
     removeLoadingBubble();
     addMessage(`❌ Error: ${err.message}`, "bot");
   }
 });
 
-// Handle "Generate Website" button click
 chatBox.addEventListener("click", async (e) => {
   if (e.target && e.target.id === "generate-site-btn") {
     if (!lastUserInput) return;
+
     e.target.disabled = true;
     e.target.innerText = "🛠️ Building website...";
 
