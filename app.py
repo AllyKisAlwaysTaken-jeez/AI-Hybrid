@@ -59,18 +59,24 @@ def chat(req: ChatRequest):
 @app.post("/generate-portfolio-advice")
 def generate_portfolio_advice(payload: ClientRequest):
     try:
+        # AI advice
         copy_advice = generate_response(
             f"Industry: {payload.industry}\n"
             f"Style: {payload.style}\n"
             f"Goals: {payload.goals}\n"
             "Give portfolio improvement advice in 3 short sections."
-        ) or "No copywriting advice generated."
+        ) or "⚠️ No copywriting returned."
 
-        seo = recommendation_engine.keyword_suggestions(payload.industry) or {"recommended_keywords": [], "meta_tags": []}
-        design = recommendation_engine.design_guidelines()[:5] or []
+        seo = recommendation_engine.keyword_suggestions(payload.industry) or {
+            "recommended_keywords": ["portfolio", "professional"],
+            "meta_tags": ["title", "description", "keywords"]
+        }
+
+        design = recommendation_engine.design_guidelines() or ["No design guidelines returned."]
+        design = design[:5]  # keep only first 5 if available
 
         return {
-            "copywriting": str(copy_advice),
+            "copywriting": copy_advice,
             "seo_tips": seo,
             "design_guidelines": design,
         }
