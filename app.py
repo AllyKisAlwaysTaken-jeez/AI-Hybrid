@@ -1,138 +1,89 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from typing import List, Dict, Optional
-import os
-import uuid
+from flask import Flask, render_template, request, jsonify
+import json, os
 
-from agent.builder import build_portfolio_website
-from competitor_scrapper import analyze_competitors
-from ai_generator import generate_response
-import recommendation_engine
+app = Flask(__name__)
 
-app = FastAPI(title="AI Portfolio Assistant")
-
-templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Store site preview path (Render-safe directory = /tmp)
-last_site = {"index_path": None, "details": None}
-
-# Chat memory (per-session)
-CONVERSATIONS: Dict[str, List[Dict[str, str]]] = {}
+MEMORY_FILE = "memory.json"
 
 
-# ---------- MODELS ----------
-class ClientRequest(BaseModel):
-    industry: str
-    style: str
-    goals: str
-    competitors: Optional[List[str]] = None
 
-class ChatRequest(BaseModel):
-    session_id: str
-    message: str
+# Helpers
+
+def load_memory():
+    if not os.path.exists(MEMORY_FILE):
+        return {"user": {}, "site": {}, "assistant_notes": {}}
+    with open(MEMORY_FILE) as f:
+        return json.load(f)
 
 
-# ---------- CHAT ENDPOINT ----------
-@app.post("/chat")
-def chat(req: ChatRequest):
-    session = req.session_id
-
-    if session not in CONVERSATIONS:
-        CONVERSATIONS[session] = [
-            {"role": "system", "content": "You are a helpful, friendly portfolio-building assistant. Be conversational."}
-        ]
-
-    CONVERSATIONS[session].append({"role": "user", "content": req.message})
-
-    full_prompt = "\n".join([f"{m['role']}: {m['content']}" for m in CONVERSATIONS[session]])
-
-    reply = generate_response(full_prompt) or "I'm sorry — my response generator returned no output."
-
-    CONVERSATIONS[session].append({"role": "assistant", "content": reply})
-
-    return {"reply": reply, "session": session, "history": CONVERSATIONS[session]}
+def save_memory(data):
+    with open(MEMORY_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
 
-# ---------- PORTFOLIO ADVICE ----------
-@app.post("/generate-portfolio-advice")
-def generate_portfolio_advice(payload: ClientRequest):
-    try:
-        copy_advice = generate_response(
-            f"Industry: {payload.industry}\n"
-            f"Style: {payload.style}\n"
-            f"Goals: {payload.goals}\n"
-            "Give concise portfolio improvement advice in 3 sections."
-        ) or "No advice returned."
 
-        seo = recommendation_engine.keyword_suggestions(payload.industry) or {
-            "recommended_keywords": ["portfolio", "professional"]
-        }
+# Pages
 
-        design = recommendation_engine.design_guidelines() or ["No design guidelines returned."]
-        design = design[:5]
-
-        return {
-            "copywriting": copy_advice,
-            "seo_tips": seo,
-            "design_guidelines": design
-        }
-
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 
-# ---------- WEBSITE GENERATION ----------
-@app.post("/generate-site")
-def generate_site(payload: ClientRequest):
-    try:
-        competitors_joined = ", ".join(payload.competitors) if payload.competitors else ""
-
-        index_path = build_portfolio_website(
-            industry=payload.industry,
-            style=payload.style,
-            goals=payload.goals,
-            project_info=competitors_joined,
-            output_dir="/tmp"     # <-- render-safe
-        )
-
-        last_site["index_path"] = index_path
-        last_site["details"] = payload.dict()
-
-        return {"path": "/preview"}
-
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+@app.route("/assistant")
+def assistant():
+    return render_template("assistant.html")
 
 
-# ---------- PREVIEW ----------
-@app.get("/preview", response_class=HTMLResponse)
-def preview_site():
-    if not last_site["index_path"]:
-        raise HTTPException(status_code=404, detail="No site generated.")
-
-    try:
-        with open(last_site["index_path"], "r", encoding="utf-8") as f:
-            html = f.read()
-        return HTMLResponse(html)
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.route("/preview")
+def preview():
+    memory = load_memory()
+    return render_template("preview.html", memory=memory)
 
 
-# ---------- COMPETITOR ANALYSIS ----------
-@app.post("/analyze-competitors")
-def analyze(payload: ClientRequest):
-    try:
-        return {"analysis": analyze_competitors(payload.competitors or [])}
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+
+# API: from index.html
+
+@app.route("/api/chat", methods=["POST"])
+def chat():
+    data = request.json
+    memory = load_memory()
+
+    # Save user info
+    memory["user"]["industry"] = data.get("industry", "")
+    memory["user"]["style"] = data.get("style", "")
+    memory["user"]["goals"] = data.get("goals", "")
+
+    # competitors: split by comma
+    competitors_raw = data.get("competitors", "")
+    memory["user"]["competitors"] = [
+        c.strip() for c in competitors_raw.split(",") if c.strip()
+    ]
+
+    save_memory(memory)
+
+    # Create a response for the UI
+    response = {
+        "message": f"Got it! I'll build your portfolio using a {memory['user']['style']} design for the {memory['user']['industry']} industry. Your goal is: {memory['user']['goals']}."
+    }
+
+    return jsonify(response)
 
 
-# ---------- HOME PAGE ----------
-@app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+# API: assistant editing tool
+@app.route("/api/update-site", methods=["POST"])
+def update_site():
+    memory = load_memory()
+    updates = request.json.get("updates", {})
+
+    for key, value in updates.items():
+        if key == "skills":
+            memory["site"]["skills"] = [s.strip() for s in value.split(",")]
+        else:
+            memory["site"][key] = value
+
+    save_memory(memory)
+
+    return jsonify({"message": "Changes applied!"})
+
+if __name__ == "__main__":
+    app.run(debug=True)

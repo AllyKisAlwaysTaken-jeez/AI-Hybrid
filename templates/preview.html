@@ -1,25 +1,24 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Site Preview</title>
-  <link rel="stylesheet" href="/static/style.css"/>
-  <style>
-    .preview-frame { width:100%; height:80vh; border:1px solid #ddd; border-radius:8px; overflow:hidden; }
-    .preview-actions { margin:12px 0; display:flex; gap:10px; align-items:center; }
-  </style>
+  <title>Portfolio Preview</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <main class="container">
-    <h1>Preview — Your Generated Website</h1>
+  <h1>Portfolio Preview</h1>
 
-    <div class="preview-actions">
-      <a class="btn" href="/assistant">Edit with Assistant</a>
-      <a class="btn ghost" href="/">Back to Chat</a>
-    </div>
+  <h2>Theme: {{ memory.site.theme }}</h2>
 
-    <iframe class="preview-frame" src="/generated/index.html"></iframe>
-  </main>
+  <p><strong>Name:</strong> {{ memory.site.name }}</p>
+  <p><strong>Bio:</strong> {{ memory.site.bio }}</p>
+
+  <h3>Skills</h3>
+  <ul>
+    {% for skill in memory.site.skills %}
+      <li>{{ skill }}</li>
+    {% endfor %}
+  </ul>
+
+  <a href="/assistant">← Edit Again</a>
 </body>
 </html>

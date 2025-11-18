@@ -1,0 +1,20 @@
+{
+  "user": {
+    "industry": "",
+    "style": "",
+    "goals": "",
+    "competitors": []
+  },
+  "site": {
+    "theme": "Default",
+    "bio": "",
+    "name": "",
+    "skills": [],
+    "projects": []
+  },
+  "assistant_notes": {
+    "advice": "",
+    "branding_keywords": [],
+    "structure_plan": ""
+  }
+}

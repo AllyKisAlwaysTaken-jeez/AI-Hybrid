@@ -26,6 +26,27 @@ function removeLoadingBubble() {
   if (bubble) bubble.remove();
 }
 
+document.getElementById('chat-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const industry = document.getElementById('industry').value;
+  const style = document.getElementById('style').value;
+  const goals = document.getElementById('goals').value;
+  const competitors = document.getElementById('competitors').value;
+
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ industry, style, goals, competitors })
+  });
+
+  const data = await res.json();
+
+  const box = document.getElementById('chat-box');
+  box.innerHTML += `<div class="message bot">${data.message}</div>`;
+});
+
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
