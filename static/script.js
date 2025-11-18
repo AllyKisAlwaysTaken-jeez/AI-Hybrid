@@ -77,12 +77,13 @@ form.addEventListener("submit", async (e) => {
         .join("<br>") || "No design guidelines returned.";
 
     const botMessage = `
-      <strong>📋 Copywriting Advice:</strong><br>${copywriting}<br><br>
-      <strong>🔍 SEO Tips:</strong> ${keywords}<br><br>
-      <strong>🎨 Design Guidelines:</strong><br>${designGuidelines}<br><br>
-      <button id="generate-site-btn" class="generate-btn">🚀 Build My Portfolio Website</button>
-    `;
-
+    <strong>📋 Copywriting Advice:</strong><br>${(data.copywriting || '').replace(/\n/g, "<br>")}<br><br>
+    <strong>🔍 SEO Tips:</strong> ${(data.seo_tips?.recommended_keywords || []).join(", ")}<br>
+    <strong>🎨 Design Guidelines:</strong><br>
+    ${(data.design_guidelines || []).map((g) => `• ${g}`).join("<br>")}<br><br>
+    <button id="generate-site-btn" class="generate-btn">🚀 Build My Portfolio Website</button>
+  `;
+    
     addMessage(botMessage, "bot");
 
     lastUserInput = { industry, style, goals, competitors };
