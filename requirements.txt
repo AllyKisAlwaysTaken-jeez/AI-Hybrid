@@ -1,6 +1,6 @@
 fastapi==0.95.2
 uvicorn==0.22.0
-Flask==3.03
+Flask==3.0.3
 Gunicorn==21.2.0
 requests==2.31.0
 beautifulsoup4==4.12.2
